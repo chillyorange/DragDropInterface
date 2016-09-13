@@ -1,4 +1,4 @@
-html, body { height: 100%; padding: 0px; margin: 0px; overflow: hidden;}
+html, body { height: 100%; padding: 0px; margin: 0px; /*overflow: hidden;*/}
 #stackhive-placement
 {
     position: fixed;
