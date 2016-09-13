@@ -4,25 +4,33 @@
 
 $(function()
 {
-    var currentElement,currentElementChangeFlag,elementRectangle,countdown,dragoverqueue_processtimer;
+    var currentElement,
+        currentElementChangeFlag,
+        elementRectangle,
+        countdown,
+        dragoverqueue_processtimer
+        frameContainer = document.getElementById('clientframe-container');
 
-    var clientFrameWindow = $('#clientframe').get(0).contentWindow;
     $("#dragitemslistcontainer li").on('dragstart',function(event) {
-        console.log("Drag Started");
+        //* console.log("Drag Started");
         dragoverqueue_processtimer = setInterval(function() {
             DragDropFunctions.ProcessDragOverQueue();
         },100);
         var insertingHTML = $(this).attr('data-insert-html');
         event.originalEvent.dataTransfer.setData("Text",insertingHTML);
     });
+
     $("#dragitemslistcontainer li").on('dragend',function() {
-        console.log("Drag End");
+        //* console.log("Drag End");
         clearInterval(dragoverqueue_processtimer);
         DragDropFunctions.removePlaceholder();
         DragDropFunctions.ClearContainerContext();
     });
-    $('#clientframe').load(function()
-    {
+
+    $('iframe', frameContainer).load(function() {
+
+        var clientFrameWindow = this.contentWindow;
+
         //Add CSS File to iFrame
         var style = $("<style data-reserved-styletag></style>").html(GetInsertionCSS());
         $(clientFrameWindow.document.head).append(style);
@@ -56,9 +64,10 @@ $(function()
         })
 
         $(clientFrameWindow.document).find('body,html').on('drop',function(event) {
+
             event.preventDefault();
             event.stopPropagation();
-            console.log('Drop event');
+            //* console.log('Drop event');
             var e;
             if (event.isTrigger)
                 e = triggerEvent.originalEvent;
@@ -66,14 +75,14 @@ $(function()
                 var e = event.originalEvent;
             try {
                 var textData = e.dataTransfer.getData('text');
-                var insertionPoint = $("#clientframe").contents().find(".drop-marker");
+                var insertionPoint = $(this).find('.drop-marker');
                 var checkDiv = $(textData);
                 insertionPoint.after(checkDiv);
                 insertionPoint.remove();
             }
             catch(e)
             {
-                console.log(e);
+                //*s console.log(e);
             }
         });
     });
@@ -81,8 +90,8 @@ $(function()
     var DragDropFunctions =
     {
         dragoverqueue : [],
-        GetMouseBearingsPercentage : function($element,elementRect,mousePos)
-        {
+
+        GetMouseBearingsPercentage : function($element,elementRect,mousePos) {
             if(!elementRect)
                 elementRect = $element.get(0).getBoundingClientRect();
             var mousePosPercent_X = ((mousePos.x-elementRect.left)/(elementRect.right-elementRect.left))*100;
@@ -90,8 +99,11 @@ $(function()
 
             return {x:mousePosPercent_X,y:mousePosPercent_Y};
         },
-        OrchestrateDragDrop : function($element, elementRect, mousePos)
-        {
+
+        OrchestrateDragDrop : function($element, elementRect, mousePos) {
+
+            var theDoc = $element.get(0).ownerDocument;
+
             //If no element is hovered or element hovered is the placeholder -> not valid -> return false;
             if(!$element || $element.length == 0 || !elementRect || !mousePos)
                 return false;
@@ -102,6 +114,7 @@ $(function()
             var breakPointNumber = {x:5,y:5};
 
             var mousePercents = this.GetMouseBearingsPercentage($element,elementRect,mousePos);
+
             if((mousePercents.x > breakPointNumber.x && mousePercents.x < 100-breakPointNumber.x) && (mousePercents.y > breakPointNumber.y && mousePercents.y < 100-breakPointNumber.y))
             {
                 //Case 1 -
@@ -140,8 +153,9 @@ $(function()
                 else
                     validElement = this.FindValidParent($element,'left');
 
-                if(validElement.is("body,html"))
-                    validElement = $("#clientframe").contents().find("body").children(":not(.drop-marker,[data-dragcontext-marker])").first();
+                if(validElement.is("body,html")) {
+                    validElement = $(theDoc).find("body").children(":not(.drop-marker,[data-dragcontext-marker])").first();
+                }
                 this.DecideBeforeAfter(validElement,mousePercents,mousePos);
             }
             else if((mousePercents.x >= 100-breakPointNumber.x) || (mousePercents.y >= 100-breakPointNumber.y))
@@ -152,11 +166,13 @@ $(function()
                 else
                     validElement = this.FindValidParent($element,'right');
 
-                if(validElement.is("body,html"))
-                    validElement = $("#clientframe").contents().find("body").children(":not(.drop-marker,[data-dragcontext-marker])").last();
+                if(validElement.is("body,html")) {
+                    validElement = $(theDoc).find("body").children(":not(.drop-marker,[data-dragcontext-marker])").last();
+                }
                 this.DecideBeforeAfter(validElement,mousePercents,mousePos);
             }
         },
+
         DecideBeforeAfter : function($targetElement,mousePercents,mousePos)
         {
             if(mousePos)
@@ -196,6 +212,7 @@ $(function()
                 }
             }
         },
+
         checkVoidElement : function($element)
         {
             var voidelements = ['i','area','base','br','col','command','embed','hr','img','input','keygen','link','meta','param','video','iframe','source','track','wbr'];
@@ -205,10 +222,12 @@ $(function()
             else
                 return false;
         },
+
         calculateDistance : function(elementData, mouseX, mouseY)
         {
             return Math.sqrt(Math.pow(elementData.x - mouseX, 2) + Math.pow(elementData.y - mouseY, 2));
         },
+
         FindValidParent : function($element,direction)
         {
             switch(direction)
@@ -271,6 +290,7 @@ $(function()
                     break;
             }
         },
+        
         addPlaceHolder : function($element,position,placeholder)
         {
             if(!placeholder)
@@ -281,47 +301,51 @@ $(function()
                 case "before":
                     placeholder.find(".message").html($element.parent().data('sh-dnd-error'));
                     $element.before(placeholder);
-                    console.log($element);
-                    console.log("BEFORE");
+                    //* console.log($element);
+                    //* console.log("BEFORE");
                     this.AddContainerContext($element,'sibling');
                     break;
                 case "after":
                     placeholder.find(".message").html($element.parent().data('sh-dnd-error'));
                     $element.after(placeholder);
-                    console.log($element);
-                    console.log("AFTER");
+                    //* console.log($element);
+                    //* console.log("AFTER");
                     this.AddContainerContext($element,'sibling');
                     break
                 case "inside-prepend":
                     placeholder.find(".message").html($element.data('sh-dnd-error'));
                     $element.prepend(placeholder);
                     this.AddContainerContext($element,'inside');
-                    console.log($element);
-                    console.log("PREPEND");
+                    //* console.log($element);
+                    //* console.log("PREPEND");
                     break;
                 case "inside-append":
                     placeholder.find(".message").html($element.data('sh-dnd-error'));
                     $element.append(placeholder);
                     this.AddContainerContext($element,'inside');
-                    console.log($element);
-                    console.log("APPEND");
+                    //* console.log($element);
+                    //* console.log("APPEND");
                     break;
             }
         },
+        
         removePlaceholder : function()
         {
-            $("#clientframe").contents().find(".drop-marker").remove();
+            $("iframe", frameContainer).contents().find(".drop-marker").remove();
         },
+        
         getPlaceHolder : function()
         {
             return $("<li class='drop-marker'></li>");
         },
+        
         PlaceInside : function($element)
         {
             var placeholder = this.getPlaceHolder();
             placeholder.addClass('horizontal').css('width',$element.width()+"px");
             this.addPlaceHolder($element,"inside-append",placeholder);
         },
+        
         PlaceBefore : function($element)
         {
             var placeholder = this.getPlaceHolder();
@@ -361,6 +385,7 @@ $(function()
                 placeholder.addClass("horizontal").css('width',$element.parent().width()+"px");
             this.addPlaceHolder($element,"after",placeholder);
         },
+        
         findNearestElement : function($container,clientX,clientY)
         {
             var _this = this;
@@ -474,11 +499,13 @@ $(function()
                 }
             }
         },
+
         AddEntryToDragOverQueue : function($element,elementRect,mousePos)
         {
             var newEvent = [$element,elementRect,mousePos];
             this.dragoverqueue.push(newEvent);
         },
+
         ProcessDragOverQueue : function($element,elementRect,mousePos)
         {
             var processing = this.dragoverqueue.pop();
@@ -492,20 +519,24 @@ $(function()
             }
 
         },
+
         GetContextMarker : function()
         {
             $contextMarker = $("<div data-dragcontext-marker><span data-dragcontext-marker-text></span></div>");
             return $contextMarker;
         },
+
         AddContainerContext : function($element,position)
         {
+
+            var theDoc = $element.get(0).ownerDocument;
 
             $contextMarker = this.GetContextMarker();
             this.ClearContainerContext();
             if($element.is('html,body'))
             {
                 position = 'inside';
-                $element =  $("#clientframe").contents().find("body");
+                $element =  $(theDoc).contents().find("body");
             }
             switch(position)
             {
@@ -515,10 +546,10 @@ $(function()
                         $contextMarker.addClass('invalid');
                     var name = this.getElementName($element);
                     $contextMarker.find('[data-dragcontext-marker-text]').html(name);
-                    if($("#clientframe").contents().find("body [data-sh-parent-marker]").length != 0)
-                        $("#clientframe").contents().find("body [data-sh-parent-marker]").first().before($contextMarker);
+                    if($(theDoc).contents().find("body [data-sh-parent-marker]").length != 0)
+                        $(theDoc).contents().find("body [data-sh-parent-marker]").first().before($contextMarker);
                     else
-                        $("#clientframe").contents().find("body").append($contextMarker);
+                        $(theDoc).contents().find("body").append($contextMarker);
                     break;
                 case "sibling":
                     this.PositionContextMarker($contextMarker,$element.parent());
@@ -527,29 +558,39 @@ $(function()
                     var name = this.getElementName($element.parent());
                     $contextMarker.find('[data-dragcontext-marker-text]').html(name);
                     $contextMarker.attr("data-dragcontext-marker",name.toLowerCase());
-                    if($("#clientframe").contents().find("body [data-sh-parent-marker]").length != 0)
-                        $("#clientframe").contents().find("body [data-sh-parent-marker]").first().before($contextMarker);
+                    if($(theDoc).contents().find("body [data-sh-parent-marker]").length != 0)
+                        $(theDoc).contents().find("body [data-sh-parent-marker]").first().before($contextMarker);
                     else
-                        $("#clientframe").contents().find("body").append($contextMarker);
+                        $(theDoc).contents().find("body").append($contextMarker);
                     break;
             }
         },
+
         PositionContextMarker : function($contextMarker,$element)
         {
+
+            var theDoc = $element.get(0).ownerDocument;
+            var theWindow = theDoc.defaultView;
+
+            //console.log($(theWindow));
+            //console.log($($("#clientframe").get(0).contentWindow));
+
             var rect = $element.get(0).getBoundingClientRect();
             $contextMarker.css({
                 height: (rect.height + 4) +"px",
                 width: (rect.width + 4) +"px",
-                top: (rect.top+$($("#clientframe").get(0).contentWindow).scrollTop() - 2) +"px",
-                left: (rect.left+$($("#clientframe").get(0).contentWindow).scrollLeft() - 2)+"px"
+                top: (rect.top+$(theWindow).scrollTop() - 2) +"px",
+                left: (rect.left+$(theWindow).scrollLeft() - 2)+"px"
             });
-            if(rect.top+$("#clientframe").contents().find("body").scrollTop() < 24)
+            if(rect.top+$(theDoc).contents().find("body").scrollTop() < 24)
                 $contextMarker.find("[data-dragcontext-marker-text]").css('top','0px');
         },
+
         ClearContainerContext : function()
-        {
-            $("#clientframe").contents().find('[data-dragcontext-marker]').remove();
+        {   
+            $("iframe", frameContainer).contents().find('[data-dragcontext-marker]').remove();
         },
+
         getElementName : function($element)
         {
             return $element.prop('tagName');
