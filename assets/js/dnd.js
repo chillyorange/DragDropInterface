@@ -85,8 +85,8 @@ $(function() {
 
         });
 
-        $(htmlBody).find('*[draggable="true"]').on('dragstart', dragStart);
-        $(htmlBody).find('*[draggable="true"]').on('dragend', dragStop);
+        $(htmlBody).on('dragstart', '*[draggable="true"]', dragStart);
+        $(htmlBody).on('dragend', '*[draggable="true"]', dragStop);
 
     });
 
