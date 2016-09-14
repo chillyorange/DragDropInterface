@@ -2,46 +2,32 @@
 //$(clientFrameWindow.document.body).find('.reserved-drop-marker').remove();
 //$(event.target).append("<p class='reserved-drop-marker'></p>");
 
-$(function()
-{
+$(function() {
+
     var currentElement,
         currentElementChangeFlag,
         elementRectangle,
         countdown,
         dragoverqueue_processtimer
-        frameContainer = document.getElementById('clientframe-container');
+        frameContainer = document.getElementById('clientframe-container'),
+        inframeCssUrl = 'assets/css/inframe.css';
 
-    $("#dragitemslistcontainer li").on('dragstart', function(event) {
-
-        console.log("Drag Started");
-        dragoverqueue_processtimer = setInterval (function() {
-            DragDropFunctions.ProcessDragOverQueue();
-        },100);
-
-        var insertingHTML = $(this).attr('data-insert-html');
-        event.originalEvent.dataTransfer.setData("Text", insertingHTML);
-
-    });
-
-    $("#dragitemslistcontainer li").on('dragend', function() {
-
-        console.log("Drag End");
-        clearInterval(dragoverqueue_processtimer);
-        DragDropFunctions.removePlaceholder();
-        DragDropFunctions.ClearContainerContext();
-
-    });
+    $("#dragitemslistcontainer li").on('dragstart', dragStart);
+    $("#dragitemslistcontainer li").on('dragend', dragStop);
 
     $('iframe', frameContainer).load(function() {
 
         var clientFrameWindow = this.contentWindow;
 
         //Add CSS File to iFrame
-        var style = $("<style data-reserved-styletag></style>").html(GetInsertionCSS());
-        $(clientFrameWindow.document.head).append(style);
-        var htmlBody = $(clientFrameWindow.document).find('body,html');
+        var style = document.createElement('LINK');
+        style.href = inframeCssUrl;
+        style.rel = "stylesheet";
+        clientFrameWindow.document.head.appendChild(style);
 
-        htmlBody.find('*').andSelf().on('dragenter',function(event) {
+        var htmlBody = clientFrameWindow.document.querySelectorAll('body, html');
+
+        $(htmlBody).find('*').andSelf().on('dragenter',function(event) {
 
             event.stopPropagation();
             currentElement = $(event.target);
@@ -72,7 +58,7 @@ $(function()
 
         })
 
-        $(clientFrameWindow.document).find('body,html').on('drop',function(event) {
+        $(clientFrameWindow.document).find('body,html').on('drop', function(event) {
 
             event.preventDefault();
             event.stopPropagation();
@@ -87,17 +73,66 @@ $(function()
             try {
                 var textData = e.dataTransfer.getData('text');
                 var insertionPoint = $(this).find('.drop-marker');
-                var checkDiv = $(textData);
+
+                var checkDiv = ( textData[0] === '#' )? $('iframe', frameContainer).contents().find(textData) : $(textData);
+
                 insertionPoint.after(checkDiv);
                 insertionPoint.remove();
             }
             catch(e) {
-                //*s console.log(e);
+                console.log(e);
             }
 
         });
 
+        $(htmlBody).find('*[draggable="true"]').on('dragstart', dragStart);
+        $(htmlBody).find('*[draggable="true"]').on('dragend', dragStop);
+
     });
+
+    function dragStart (event) {
+
+        var insertingHTML;
+
+        this.id = makeid();
+
+        console.log("Drag Started");
+        dragoverqueue_processtimer = setInterval (function() {
+            DragDropFunctions.ProcessDragOverQueue();
+        }, 100);
+
+        if( this.hasAttribute('data-insert-html') ) {
+            insertingHTML = $(this).attr('data-insert-html');
+        } else {
+            insertingHTML = '#' + this.id;
+        }
+
+        event.originalEvent.dataTransfer.setData("Text", insertingHTML);
+
+    };
+
+    function dragStop () {
+
+        console.log("Drag End");
+        clearInterval(dragoverqueue_processtimer);
+        DragDropFunctions.removePlaceholder();
+        DragDropFunctions.ClearContainerContext();
+
+        this.removeAttribute('id');
+
+    };
+
+    function makeid() {
+
+        var text = "",
+            possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+        for( var i = 0; i < 5; i++ ) {
+            text += possible.charAt(Math.floor(Math.random() * possible.length));
+        }
+
+        return text;
+    }
 
     var DragDropFunctions = {
 
@@ -684,13 +719,4 @@ $(function()
 
     };
 
-    GetInsertionCSS = function() {
-
-        var styles = ""+
-            ".reserved-drop-marker{width:100%;height:2px;background:#00a8ff;position:absolute}.reserved-drop-marker::after,.reserved-drop-marker::before{content:'';background:#00a8ff;height:7px;width:7px;position:absolute;border-radius:50%;top:-2px}.reserved-drop-marker::before{left:0}.reserved-drop-marker::after{right:0}";
-        styles += "[data-dragcontext-marker],[data-sh-parent-marker]{outline:#19cd9d solid 2px;text-align:center;position:absolute;z-index:123456781;pointer-events:none;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif}[data-dragcontext-marker] [data-dragcontext-marker-text],[data-sh-parent-marker] [data-sh-parent-marker-text]{background:#19cd9d;color:#fff;padding:2px 10px;display:inline-block;font-size:14px;position:relative;top:-24px;min-width:121px;font-weight:700;pointer-events:none;z-index:123456782}[data-dragcontext-marker].invalid{outline:#dc044f solid 2px}[data-dragcontext-marker].invalid [data-dragcontext-marker-text]{background:#dc044f}[data-dragcontext-marker=body]{outline-offset:-2px}[data-dragcontext-marker=body] [data-dragcontext-marker-text]{top:0;position:fixed}";
-        styles += '.drop-marker{pointer-events:none;}.drop-marker.horizontal{background:#00adff;position:absolute;height:2px;list-style:none;visibility:visible!important;box-shadow:0 1px 2px rgba(255,255,255,.4),0 -1px 2px rgba(255,255,255,.4);z-index:123456789;text-align:center}.drop-marker.horizontal.topside{margin-top:0}.drop-marker.horizontal.bottomside{margin-top:2px}.drop-marker.horizontal:before{content:"";width:8px;height:8px;background:#00adff;border-radius:8px;margin-top:-3px;float:left;box-shadow:0 1px 2px rgba(255,255,255,.4),0 -1px 2px rgba(255,255,255,.4)}.drop-marker.horizontal:after{content:"";width:8px;height:8px;background:#00adff;border-radius:8px;margin-top:-3px;float:right;box-shadow:0 1px 2px rgba(255,255,255,.4),0 -1px 2px rgba(255,255,255,.4)}.drop-marker.vertical{height:50px;list-style:none;border:1px solid #00ADFF;position:absolute;margin-left:3px;display:inline;box-shadow:1px 0 2px rgba(255,255,255,.4),-1px 0 2px rgba(255,255,255,.4)}.drop-marker.vertical.leftside{margin-left:0}.drop-marker.vertical.rightside{margin-left:3px}.drop-marker.vertical:before{content:"";width:8px;height:8px;background:#00adff;border-radius:8px;margin-top:-4px;top:0;position:absolute;margin-left:-4px;box-shadow:1px 0 2px rgba(255,255,255,.4),-1px 0 2px rgba(255,255,255,.4)}.drop-marker.vertical:after{content:"";width:8px;height:8px;background:#00adff;border-radius:8px;margin-left:-4px;bottom:-4px;position:absolute;box-shadow:1px 0 2px rgba(255,255,255,.4),-1px 0 2px rgba(255,255,255,.4)}';
-        return styles;
-        
-    }
 });
