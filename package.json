@@ -1,0 +1,19 @@
+{
+  "name": "draganddropinterface",
+  "version": "1.0.0",
+  "description": "Drag and drop is almost a goto way for various user interactions. More often than not, drag and drop functionality required is quite simple and easily solved by jQuery UI or other frameworks. Things start to get murky when you are working with an iframe (as always!) or need to mould the drag and drop to your needs.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chillyorange/DragDropInterface.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/chillyorange/DragDropInterface/issues"
+  },
+  "homepage": "https://github.com/chillyorange/DragDropInterface#readme"
+}
