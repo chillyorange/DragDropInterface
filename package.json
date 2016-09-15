@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/chillyorange/DragDropInterface/issues"
   },
-  "homepage": "https://github.com/chillyorange/DragDropInterface#readme"
+  "homepage": "https://github.com/chillyorange/DragDropInterface#readme",
+  "devDependencies": {
+    "webpack": "^1.13.2"
+  }
 }
