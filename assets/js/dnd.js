@@ -1,7 +1,3 @@
-//Changed Code -
-//$(clientFrameWindow.document.body).find('.reserved-drop-marker').remove();
-//$(event.target).append("<p class='reserved-drop-marker'></p>");
-
 $(function() {
 
     var currentElement,
