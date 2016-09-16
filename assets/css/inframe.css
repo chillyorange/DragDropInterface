@@ -1,3 +1,7 @@
+*[draggable="true"]:hover {
+	cursor: move;
+}
+
 .reserved-drop-marker {
 	width: 100%;
 	height: 2px;

@@ -23,6 +23,17 @@
         {
             max-width:100%;
         }
+        p {
+            position: relative;
+        }
+        p > span {
+            position: absolute;
+            top: 0px;
+            left: 0px;
+            width: 30px;
+            height: 30px;
+            background: black;
+        }
     </style>
 </head>
 
@@ -30,7 +41,10 @@
 <div class="jumbotron">
     <div class="container">
         <h1>Hello, world!</h1>
-        <p>This is a template for a simple marketing or informational website. It includes a large callout called a jumbotron and three supporting pieces of content. Use it as a starting point to create something more unique.</p>
+        <p>
+            <span class="handle"></span>
+            This is a template for a simple marketing or informational website. It includes a large callout called a jumbotron and three supporting pieces of content. Use it as a starting point to create something more unique.
+        </p>
         <p>
             <a class="btn btn-primary btn-lg" role="button">Learn more &raquo;</a>
         </p>
@@ -41,9 +55,9 @@
     <!-- Example row of columns -->
     <div class="row">
         <div class="col-md-4">
-            <h2 draggable="true" id="id123">Heading</h2>
-            <p draggable="true">Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed odio dui.</p>
-            <p draggable="true">
+            <h2>Heading</h2>
+            <p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed odio dui.</p>
+            <p>
                 <a class="btn btn-default" href="#" role="button">View details &raquo;</a>
             </p>
         </div>

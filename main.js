@@ -9,6 +9,9 @@ dragDrop.start();
 
 $('iframe').on('load', function () {
 
-	dragDrop.addFrame(this);
+	dragDrop.addFrame({
+		target: this, 
+		selector: 'p'
+	});
 
 });

@@ -16,146 +16,20 @@
 
 	};
 
-	/*Dnd.prototype.dnd = function () {
-
-		var currentElement,
-	        currentElementChangeFlag,
-	        elementRectangle,
-	        countdown,
-	        dragoverqueue_processtimer
-	        frameContainer = document.getElementById('clientframe-container'),
-	        inframeCssUrl = 'assets/css/inframe.css';
-
-	    $(this.draggables).on('dragstart', dragStart);
-	    $(this.draggables).on('dragend', dragStop);
-
-	    $('iframe', frameContainer).load(function() {
-
-	        var clientFrameWindow = this.contentWindow;
-
-	        //Add CSS File to iFrame
-	        var style = document.createElement('LINK');
-	        style.href = inframeCssUrl;
-	        style.rel = "stylesheet";
-	        clientFrameWindow.document.head.appendChild(style);
-
-	        var htmlBody = clientFrameWindow.document.querySelectorAll('body, html');
-
-	        $(htmlBody).find('*').andSelf().on('dragenter',function(event) {
-
-	            event.stopPropagation();
-	            currentElement = $(event.target);
-	            currentElementChangeFlag = true;
-	            elementRectangle = event.target.getBoundingClientRect();
-	            countdown = 1;
-
-	        }).on('dragover', function(event) {
-
-	            event.preventDefault();
-	            event.stopPropagation();
-
-	            if( countdown%15 !== 0 && currentElementChangeFlag === false) {
-
-	                countdown = countdown+1;
-	                return;
-	            
-	            }
-
-	            event = event || window.event;
-
-	            var x = event.originalEvent.clientX;
-	            var y = event.originalEvent.clientY;
-	            countdown = countdown+1;
-	            currentElementChangeFlag = false;
-	            var mousePosition = {x:x, y:y};
-	            DragDropFunctions.AddEntryToDragOverQueue(currentElement,elementRectangle,mousePosition);
-
-	        })
-
-	        $(clientFrameWindow.document).find('body,html').on('drop', function(event) {
-
-	            event.preventDefault();
-	            event.stopPropagation();
-	            
-	            console.log('Drop event');
-	            
-	            var e;
-
-	            if (event.isTrigger)e = triggerEvent.originalEvent;
-	            else var e = event.originalEvent;
-
-	            try {
-	                var textData = e.dataTransfer.getData('text');
-	                var insertionPoint = $(this).find('.drop-marker');
-
-	                var checkDiv = ( textData[0] === '#' )? $('iframe', frameContainer).contents().find(textData) : $(textData);
-
-	                insertionPoint.after(checkDiv);
-	                insertionPoint.remove();
-	            }
-	            catch(e) {
-	                console.log(e);
-	            }
-
-	        });
-
-	        $(htmlBody).on('dragstart', '*[draggable="true"]', dragStart);
-	        $(htmlBody).on('dragend', '*[draggable="true"]', dragStop);
-
-	    });
-
-	    function dragStart (event) {
-
-	        var insertingHTML;
-
-	        this.id = makeid();
-
-	        console.log("Drag Started");
-	        dragoverqueue_processtimer = setInterval (function() {
-	            DragDropFunctions.ProcessDragOverQueue();
-	        }, 100);
-
-	        if( this.hasAttribute('data-insert-html') ) {
-	            insertingHTML = $(this).attr('data-insert-html');
-	        } else {
-	            insertingHTML = '#' + this.id;
-	        }
-
-	        event.originalEvent.dataTransfer.setData("Text", insertingHTML);
-
-	    };
-
-	    function dragStop () {
-
-	        console.log("Drag End");
-	        clearInterval(dragoverqueue_processtimer);
-	        DragDropFunctions.removePlaceholder();
-	        DragDropFunctions.ClearContainerContext();
-
-	        this.removeAttribute('id');
-
-	    };
-
-	    function makeid() {
-
-	        var text = "",
-	            possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-
-	        for( var i = 0; i < 5; i++ ) {
-	            text += possible.charAt(Math.floor(Math.random() * possible.length));
-	        }
-
-	        return text;
-	    }
-
-	};*/
-
 	Dnd.prototype.start = function () {
 
 		$(this.draggables).on('dragstart', this.dragStart);
 	    $(this.draggables).on('dragend', this.dragStop);
 
 	};
+
+    Dnd.prototype.beforeDrag = function (e) {
+
+        this.target = e.target;
+
+        console.log(this.target);
+
+    };
 
 	Dnd.prototype.makeid = function () {
 
@@ -171,6 +45,13 @@
 	};
 
 	Dnd.prototype.dragStart = function (event) {
+
+        if( event.currentTarget.querySelector('.handle') ) {//check if the draggable contains a handle
+
+            var handle = event.currentTarget.querySelector('.handle');
+            if (!handle.contains(this.target)) event.preventDefault();
+        
+        }
 
 		var insertingHTML;
 
@@ -202,9 +83,10 @@
 
 	};
 
-	Dnd.prototype.addFrame = function (frame) {
+	Dnd.prototype.addFrame = function (options) {
 
-		var clientFrameWindow = frame.contentWindow;
+		var clientFrameWindow = options.target.contentWindow,
+            elements;
 
 		var style = document.createElement('LINK');
 	    style.href = this.inframeCssUrl;
@@ -271,8 +153,15 @@
 
         });
 
-        $(htmlBody).on('dragstart', '*[draggable="true"]', this.dragStart);
-        $(htmlBody).on('dragend', '*[draggable="true"]', this.dragStop);
+        //prep draggable elements
+        $(clientFrameWindow.document).find( options.selector ).each(function () {
+            this.setAttribute('draggable', true);
+        });
+
+        $(htmlBody).on('dragstart', options.selector, this.dragStart);
+        $(htmlBody).on('dragend', options.selector, this.dragStop);
+        $(htmlBody).on('mousedown', options.selector, this.beforeDrag);
+
 
 	}
 
