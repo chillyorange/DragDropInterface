@@ -11,7 +11,7 @@ $('iframe').on('load', function () {
 
 	dragDrop.addFrame({
 		target: this, 
-		selector: 'p'
+		selector: 'p, h1, h2'
 	});
 
 });

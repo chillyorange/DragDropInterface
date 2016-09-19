@@ -1,10 +1,29 @@
 (function () {
 
+    if (!Element.prototype.matches) {
+        Element.prototype.matches = 
+            Element.prototype.matchesSelector || 
+            Element.prototype.mozMatchesSelector ||
+            Element.prototype.msMatchesSelector || 
+            Element.prototype.oMatchesSelector || 
+            Element.prototype.webkitMatchesSelector ||
+            function(s) {
+                var matches = (this.document || this.ownerDocument).querySelectorAll(s),
+                    i = matches.length;
+                while (--i >= 0 && matches.item(i) !== this) {}
+                return i > -1;            
+            };
+    }
+
 	var Dnd = function (options) {
 
 		// Configurable options
-		this.draggables = options.draggables || null;
-		this.inframeCssUrl = options.inFrameCssUrl || null;
+		this.draggables = options.draggables || null;                 //draggable elements in the parent frame
+		this.inframeCssUrl = options.inFrameCssUrl || null;           //css loaded in the iframes
+        this.accepts = [
+            {draggable: 'p', droppable: '.col-md-4'},
+            {draggable: 'h1', droppable: 'div'}
+        ],
 
 		this.currentElement;
 		this.currentElementChangeFlag;
@@ -43,6 +62,26 @@
         return text;
 
 	};
+
+    Dnd.prototype.isAllowed = function (dragged, dropped) {
+
+        console.log('dragged :', dragged);
+        console.log('dropped :', dropped);
+
+        for ( var x = 0; x < this.accepts.length; x++ ) {
+
+            if ( dragged.matches( this.accepts[x].draggable ) ) {
+
+                if ( dropped.matches ( this.accepts[x].droppable ) ) return true;
+                else return false;
+
+            }
+
+        }
+
+        return false;
+
+    },
 
 	Dnd.prototype.dragStart = function (event) {
 
@@ -132,7 +171,7 @@
             event.stopPropagation();
             
             console.log('Drop event');
-            
+
             var e;
 
             if (event.isTrigger)e = triggerEvent.originalEvent;
@@ -140,9 +179,14 @@
 
             try {
                 var textData = e.dataTransfer.getData('text');
-                var insertionPoint = $(this).find('.drop-marker');
+                var insertionPoint = $(event.currentTarget).find('.drop-marker');
+
+                var parent = insertionPoint.get(0).parentNode;
 
                 var checkDiv = ( textData[0] === '#' )? $('iframe', this.frameContainer).contents().find(textData) : $(textData);
+
+                //make sure we can drop this element
+                if ( !this.isAllowed(checkDiv.get(0), parent) ) return false;
 
                 insertionPoint.after(checkDiv);
                 insertionPoint.remove();
@@ -151,7 +195,7 @@
                 console.log(e);
             }
 
-        });
+        }.bind(this));
 
         //prep draggable elements
         $(clientFrameWindow.document).find( options.selector ).each(function () {
