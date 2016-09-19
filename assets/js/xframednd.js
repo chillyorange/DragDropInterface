@@ -1,5 +1,6 @@
 (function () {
 
+    // Polyfill for the .matches() function
     if (!Element.prototype.matches) {
         Element.prototype.matches = 
             Element.prototype.matchesSelector || 
@@ -20,9 +21,8 @@
 		// Configurable options
 		this.draggables = options.draggables || null;                 //draggable elements in the parent frame
 		this.inframeCssUrl = options.inFrameCssUrl || null;           //css loaded in the iframes
-        this.accepts = [
-            {draggable: 'p', droppable: '.col-md-4'},
-            {draggable: 'h1', droppable: 'div'}
+        this.accepts = options.accepts || [                           //determines which elements can be dropped into which containers
+            {draggable: '*', droppable: '*'}
         ],
 
 		this.currentElement;
@@ -30,15 +30,16 @@
 		this.elementRectangle;
 		this.countdown;
 		this.dragoverqueue_processtimer;
+        this.currentlyDragged;
 
-		console.log(this);
+		//* console.log(this);
 
 	};
 
 	Dnd.prototype.start = function () {
 
-		$(this.draggables).on('dragstart', this.dragStart);
-	    $(this.draggables).on('dragend', this.dragStop);
+	   $(this.draggables).on('dragstart', this.dragStart.bind(this));
+	   $(this.draggables).on('dragend', this.dragStop);
 
 	};
 
@@ -46,7 +47,7 @@
 
         this.target = e.target;
 
-        console.log(this.target);
+        //* console.log(this.target);
 
     };
 
@@ -65,8 +66,8 @@
 
     Dnd.prototype.isAllowed = function (dragged, dropped) {
 
-        console.log('dragged :', dragged);
-        console.log('dropped :', dropped);
+        //console.log('dragged :', dragged);
+        //console.log('dropped :', dropped);
 
         for ( var x = 0; x < this.accepts.length; x++ ) {
 
@@ -88,23 +89,25 @@
         if( event.currentTarget.querySelector('.handle') ) {//check if the draggable contains a handle
 
             var handle = event.currentTarget.querySelector('.handle');
-            if (!handle.contains(this.target)) event.preventDefault();
+            if (!handle.contains(event.currentTarget)) event.preventDefault();
         
         }
 
 		var insertingHTML;
 
-        this.id = 'id1234';
+        event.currentTarget.id = 'id1234';
 
-        console.log("Drag Started");
+        //* console.log("Drag Started");
         this.dragoverqueue_processtimer = setInterval (function() {
             DragDropFunctions.ProcessDragOverQueue();
         }, 100);
 
-        if( this.hasAttribute('data-insert-html') ) {
-            insertingHTML = $(this).attr('data-insert-html');
+        if( event.currentTarget.hasAttribute('data-insert-html') ) {
+            insertingHTML = $(event.currentTarget).attr('data-insert-html');
+            this.currentlyDragged = $(insertingHTML).get(0);
         } else {
-            insertingHTML = '#' + this.id;
+            insertingHTML = '#' + event.currentTarget.id;
+            this.currentlyDragged = $(event.currentTarget).closest('body').find(insertingHTML).get(0);
         }
 
         event.originalEvent.dataTransfer.setData("Text", insertingHTML);
@@ -113,7 +116,7 @@
 
 	Dnd.prototype.dragStop = function () {
 
-		console.log("Drag End");
+		//* console.log("Drag End");
 	    clearInterval(this.dragoverqueue_processtimer);
 	    DragDropFunctions.removePlaceholder();
 	    DragDropFunctions.ClearContainerContext();
@@ -142,10 +145,15 @@
             this.elementRectangle = event.target.getBoundingClientRect();
             this.countdown = 1;
 
-        }).on('dragover', function(event) {
+        }.bind(this)).on('dragover', function(event) {
+
+            // this holds the droppable
 
             event.preventDefault();
             event.stopPropagation();
+
+            //make sure the dragged element is allowed inside this droppable
+            if ( !this.isAllowed(this.currentlyDragged, event.currentTarget) ) return false;
 
             if( this.countdown%15 !== 0 && this.currentElementChangeFlag === false) {
 
@@ -163,14 +171,14 @@
             var mousePosition = {x:x, y:y};
             DragDropFunctions.AddEntryToDragOverQueue(this.currentElement, this.elementRectangle, mousePosition);
 
-        });
+        }.bind(this));
 
         $(clientFrameWindow.document).find('body,html').on('drop', function(event) {
 
             event.preventDefault();
             event.stopPropagation();
             
-            console.log('Drop event');
+            //* console.log('Drop event');
 
             var e;
 
@@ -192,7 +200,7 @@
                 insertionPoint.remove();
             }
             catch(e) {
-                console.log(e);
+                //* console.log(e);
             }
 
         }.bind(this));
@@ -202,7 +210,7 @@
             this.setAttribute('draggable', true);
         });
 
-        $(htmlBody).on('dragstart', options.selector, this.dragStart);
+        $(htmlBody).on('dragstart', options.selector, this.dragStart.bind(this));
         $(htmlBody).on('dragend', options.selector, this.dragStop);
         $(htmlBody).on('mousedown', options.selector, this.beforeDrag);
 
