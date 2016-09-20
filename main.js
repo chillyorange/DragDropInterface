@@ -4,8 +4,6 @@ var dragDrop = new dnd({
 	draggables: "#dragitemslistcontainer li",
 	inFrameCssUrl: "assets/css/inframe.css",
 	accepts: [
-		{draggable: 'h1', droppable: '.col-md-4'},
-		{draggable: 'h2', droppable: '.col-md-4'},
         {draggable: '*', droppable: '*'}
     ]
 });

@@ -86,10 +86,10 @@
 
 	Dnd.prototype.dragStart = function (event) {
 
-        if( event.currentTarget.querySelector('.handle') ) {//check if the draggable contains a handle
+        if( this.target.querySelector('.handle') ) {//check if the draggable contains a handle
 
-            var handle = event.currentTarget.querySelector('.handle');
-            if (!handle.contains(event.currentTarget)) event.preventDefault();
+            var handle = this.target.querySelector('.handle');
+            if (!handle.contains(this.target)) event.preventDefault();
         
         }
 
@@ -212,7 +212,7 @@
 
         $(htmlBody).on('dragstart', options.selector, this.dragStart.bind(this));
         $(htmlBody).on('dragend', options.selector, this.dragStop);
-        $(htmlBody).on('mousedown', options.selector, this.beforeDrag);
+        $(htmlBody).on('mousedown', options.selector, this.beforeDrag.bind(this));
 
 
 	}
